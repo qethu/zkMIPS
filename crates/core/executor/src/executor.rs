@@ -1284,7 +1284,7 @@ impl<'a> Executor<'a> {
                 return Err(ExecutionError::UnsupportedInstruction(instruction.op_c));
             }
         }
-        log::debug!(
+        println!(
             "Executing instruction: {:?} at PC: {:08X}, Next PC: {:08X}, Next Next PC: {:08X}， a: {:08X}, b: {:08X}, c: {:08X}, hi_or_prev_a: {:?}",
             instruction,
             pc,
@@ -1323,7 +1323,7 @@ impl<'a> Executor<'a> {
                 regs[reg] = self.register((reg as u8).into());
             }
 
-            log::debug!(
+            println!(
                 "PC: {:08X}, Next PC: {:08X} regs {:08X?}\n",
                 self.state.pc, self.state.next_pc, regs
             );
