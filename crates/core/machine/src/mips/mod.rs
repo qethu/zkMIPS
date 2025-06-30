@@ -864,7 +864,7 @@ pub mod tests {
     #[test]
     fn test_mul_mod_prove() {
         utils::setup_logger();
-        let mul_ops = [Opcode::MUL, Opcode::MOD, Opcode::MODU];
+        let mul_ops = [Opcode::MUL, Opcode::MOD, Opcode::MODU, Opcode::DIV3, Opcode::DIVU3];
         let operands =
             [(1, 1), (1234, 5678), (8765, 4321), (0xffff, 0xffff - 1), (u32::MAX - 1, u32::MAX)];
         for mul_op in mul_ops.iter() {

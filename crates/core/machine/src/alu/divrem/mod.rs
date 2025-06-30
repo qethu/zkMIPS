@@ -144,6 +144,12 @@ pub struct DivRemCols<T> {
     /// Flag to indicate whether the opcode is DIVU.
     pub is_divu: T,
 
+    /// Flag to indicate whether the opcode is DIV3.
+    pub is_div3: T,
+
+    /// Flag to indicate whether the opcode is DIVU3.
+    pub is_divu3: T,
+
     /// Flag to indicate whether the opcode is MOD.
     pub is_mod: T,
 
@@ -219,6 +225,8 @@ impl<F: PrimeField32> MachineAir<F> for DivRemChip {
                     || event.opcode == Opcode::DIV
                     || event.opcode == Opcode::MODU
                     || event.opcode == Opcode::MOD
+                    || event.opcode == Opcode::DIV3
+                    || event.opcode == Opcode::DIVU3
             );
             let mut row = [F::ZERO; NUM_DIVREM_COLS];
             let cols: &mut DivRemCols<F> = row.as_mut_slice().borrow_mut();
@@ -233,6 +241,8 @@ impl<F: PrimeField32> MachineAir<F> for DivRemChip {
                 cols.is_div = F::from_bool(event.opcode == Opcode::DIV);
                 cols.is_modu = F::from_bool(event.opcode == Opcode::MODU);
                 cols.is_mod = F::from_bool(event.opcode == Opcode::MOD);
+                cols.is_divu3 = F::from_bool(event.opcode == Opcode::DIVU3);
+                cols.is_div3 = F::from_bool(event.opcode == Opcode::DIV3);
                 cols.is_c_0.populate(event.c);
 
                 if event.opcode == Opcode::DIVU || event.opcode == Opcode::DIV {
@@ -378,7 +388,7 @@ where
         let one: AB::Expr = AB::F::ONE.into();
         let zero: AB::Expr = AB::F::ZERO.into();
 
-        let is_real = local.is_div + local.is_divu + local.is_mod + local.is_modu;
+        let is_real = local.is_div + local.is_divu + local.is_mod + local.is_modu + local.is_div3 + local.is_divu3;
         // Calculate whether b, remainder, and c are negative.
         {
             // Negative if and only if op code is signed & MSB = 1.
@@ -391,7 +401,7 @@ where
             for msb_sign_pair in msb_sign_pairs.iter() {
                 let msb = msb_sign_pair.0;
                 let is_negative = msb_sign_pair.1;
-                builder.assert_eq(msb * (local.is_div + local.is_mod), is_negative);
+                builder.assert_eq(msb * (local.is_div + local.is_mod + local.is_div3), is_negative);
             }
         }
 
@@ -414,7 +424,7 @@ where
             let opcode = {
                 let mult = AB::Expr::from_canonical_u32(Opcode::MULT as u32);
                 let multu = AB::Expr::from_canonical_u32(Opcode::MULTU as u32);
-                (local.is_div + local.is_mod) * mult + (local.is_divu + local.is_modu) * multu
+                (local.is_div + local.is_mod + local.is_div3) * mult + (local.is_divu + local.is_modu + local.is_divu3) * multu
             };
 
             // The lower 4 bytes of c_times_quotient must match the LO in (c * quotient).
@@ -451,7 +461,7 @@ where
                 local.is_overflow,
                 local.is_overflow_b.is_diff_zero.result
                     * local.is_overflow_c.is_diff_zero.result
-                    * (local.is_div + local.is_mod),
+                    * (local.is_div + local.is_mod + local.is_div3),
             );
         }
 
@@ -656,6 +666,8 @@ where
                 local.is_divu,
                 local.is_mod,
                 local.is_modu,
+                local.is_div3,
+                local.is_divu3,
                 local.is_overflow,
                 local.b_msb,
                 local.rem_msb,
@@ -675,7 +687,7 @@ where
             // Exactly one of the opcode flags must be on.
             builder.when(is_real.clone()).assert_eq(
                 one.clone(),
-                local.is_divu + local.is_div + local.is_mod + local.is_modu,
+                is_real.clone(),
             );
 
             let opcode = {
@@ -683,11 +695,15 @@ where
                 let div: AB::Expr = AB::F::from_canonical_u32(Opcode::DIV as u32).into();
                 let modi: AB::Expr = AB::F::from_canonical_u32(Opcode::MOD as u32).into();
                 let modu: AB::Expr = AB::F::from_canonical_u32(Opcode::MODU as u32).into();
+                let divu3: AB::Expr = AB::F::from_canonical_u32(Opcode::DIVU3 as u32).into();
+                let div3: AB::Expr = AB::F::from_canonical_u32(Opcode::DIV3 as u32).into();
 
                 local.is_divu * divu
                     + local.is_div * div
                     + local.is_mod * modi
                     + local.is_modu * modu
+                    + local.is_divu3 * divu3
+                    + local.is_div3 * div3
             };
 
             // DivRem Chip is only used for DIV and DIVU instruction currently. So is_write_hi will always be ture.
@@ -717,7 +733,7 @@ where
                 local.pc,
                 local.next_pc,
                 AB::Expr::ZERO,
-                opcode,
+                opcode.clone(),
                 local.remainder,
                 local.b,
                 local.c,
@@ -729,6 +745,26 @@ where
                 AB::Expr::ZERO,
                 AB::Expr::ONE,
                 local.is_mod + local.is_modu,
+            );
+
+            builder.receive_instruction(
+                AB::Expr::ZERO,
+                AB::Expr::ZERO,
+                local.pc,
+                local.next_pc,
+                AB::Expr::ZERO,
+                opcode,
+                local.quotient,
+                local.b,
+                local.c,
+                Word([AB::Expr::ZERO; 4]),
+                AB::Expr::ZERO,
+                AB::Expr::ZERO,
+                AB::Expr::ZERO,
+                AB::Expr::ZERO,
+                AB::Expr::ZERO,
+                AB::Expr::ONE,
+                local.is_div3 + local.is_divu3,
             );
 
             // Write the HI register, the register can only be Register::HI（33）.
