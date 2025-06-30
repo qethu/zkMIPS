@@ -812,7 +812,7 @@ impl<'a> Executor<'a> {
             Opcode::MUL | Opcode::MULT | Opcode::MULTU => {
                 self.record.mul_events.push(event_comp);
             }
-            Opcode::DIV | Opcode::DIVU | Opcode::MOD | Opcode::MODU => {
+            Opcode::DIV | Opcode::DIVU | Opcode::MOD | Opcode::MODU | Opcode::DIV3 | Opcode::DIVU3 => {
                 self.record.divrem_events.push(event_comp);
                 emit_divrem_dependencies(self, event);
             }
@@ -1208,8 +1208,8 @@ impl<'a> Executor<'a> {
             | Opcode::CLO
             | Opcode::MOD
             | Opcode::MODU
-            | Opcode::DIV2
-            | Opcode::DIVU2 => {
+            | Opcode::DIV3
+            | Opcode::DIVU3 => {
                 (hi_or_prev_a, a, b, c) = self.execute_alu(instruction);
             }
 
@@ -1509,8 +1509,8 @@ impl<'a> Executor<'a> {
             Opcode::DIVU => (b / c, b % c), //lo,hi
             Opcode::MOD => (((b as i32) % (c as i32)) as u32, 0),
             Opcode::MODU => (b % c, 0), //lo,hi
-            Opcode::DIV2 => (((b as i32) / (c as i32)) as u32, 0),
-            Opcode::DIVU2 => (b / c, 0), //lo,hi
+            Opcode::DIV3 => (((b as i32) / (c as i32)) as u32, 0),
+            Opcode::DIVU3 => (b / c, 0), // lo,hi
             Opcode::AND => (b & c, 0),
             Opcode::OR => (b | c, 0),
             Opcode::XOR => (b ^ c, 0),
@@ -2712,6 +2712,12 @@ mod tests {
         simple_op_code_test(Opcode::MOD, 0xffffffff, 0xffffffff, 0xfffffffe);
         simple_op_code_test(Opcode::MOD, 0x00000001, 0x00000102, 0x00000101);
         simple_op_code_test(Opcode::MOD, 0x00000100, 0x00000100, 0x00000101);
+        simple_op_code_test(Opcode::DIV3, 0, 0xffffffff, 0xfffffffe);
+        simple_op_code_test(Opcode::DIV3, 0x00000001, 0x00000102, 0x00000101);
+        simple_op_code_test(Opcode::DIV3, 0x00000000, 0x00000100, 0x00000101);
+        simple_op_code_test(Opcode::DIVU3, 1, 0xffffffff, 0xfffffffe);
+        simple_op_code_test(Opcode::DIVU3, 0x00000001, 0x00000102, 0x00000101);
+        simple_op_code_test(Opcode::DIVU3, 0x00000000, 0x00000100, 0x00000101);
     }
 
     #[test]

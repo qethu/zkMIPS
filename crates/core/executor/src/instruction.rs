@@ -76,6 +76,8 @@ impl Instruction {
                 | Opcode::CLO
                 | Opcode::MOD
                 | Opcode::MODU
+                | Opcode::DIV3
+                | Opcode::DIVU3
         )
     }
 
@@ -246,7 +248,7 @@ impl Instruction {
                 if sa == 3 {
                     Ok(Self::new(Opcode::MOD, rd, rs, rt, false, false)) // MOD: rd = rs % rt
                 } else if sa == 2 {
-                    Ok(Self::new(Opcode::DIV2, rd, rs, rt, false, false)) // MOD: rd = rs % rt
+                    Ok(Self::new(Opcode::DIV3, rd, rs, rt, false, false)) // MOD: rd = rs % rt
                 } else {
                     Ok(Self::new(Opcode::DIV, 32, rs, rt, false, false)) // DIV: (hi, lo) = rs / rt
                 }
@@ -256,7 +258,7 @@ impl Instruction {
                 if sa == 3 {
                     Ok(Self::new(Opcode::MODU, rd, rs, rt, false, false)) // MODU: rd = rs % rt
                 } else if sa == 2 {
-                    Ok(Self::new(Opcode::DIVU2, rd, rs, rt, false, false)) // MOD: rd = rs % rt
+                    Ok(Self::new(Opcode::DIVU3, rd, rs, rt, false, false)) // MOD: rd = rs % rt
                 } else {
                     Ok(Self::new(Opcode::DIVU, 32, rs, rt, false, false)) // DIVU: (hi, lo) = rs / rt
                 }
