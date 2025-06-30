@@ -1207,7 +1207,9 @@ impl<'a> Executor<'a> {
             | Opcode::CLZ
             | Opcode::CLO
             | Opcode::MOD
-            | Opcode::MODU => {
+            | Opcode::MODU
+            | Opcode::DIV2
+            | Opcode::DIVU2 => {
                 (hi_or_prev_a, a, b, c) = self.execute_alu(instruction);
             }
 
@@ -1507,6 +1509,8 @@ impl<'a> Executor<'a> {
             Opcode::DIVU => (b / c, b % c), //lo,hi
             Opcode::MOD => (((b as i32) % (c as i32)) as u32, 0),
             Opcode::MODU => (b % c, 0), //lo,hi
+            Opcode::DIV2 => (((b as i32) / (c as i32)) as u32, 0),
+            Opcode::DIVU2 => (b / c, 0), //lo,hi
             Opcode::AND => (b & c, 0),
             Opcode::OR => (b | c, 0),
             Opcode::XOR => (b ^ c, 0),

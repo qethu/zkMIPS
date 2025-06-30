@@ -71,6 +71,8 @@ pub enum Opcode {
     INS = 51,   // INS
     MOD = 52,   // DIVREM
     MODU = 53,  // DIVREM
+    DIV2 = 54,  // DIVREM
+    DIVU2 = 55, // DIVREM
     UNIMPL = 0xff,
 }
 
@@ -133,6 +135,8 @@ impl Opcode {
             Opcode::MSUBU => "msubu",
             Opcode::MOD => "mod",
             Opcode::MODU => "modu",
+            Opcode::DIV2 => "div2",
+            Opcode::DIVU2 => "divu2",
             Opcode::UNIMPL => "unimpl",
         }
     }

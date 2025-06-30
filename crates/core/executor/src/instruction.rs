@@ -245,6 +245,8 @@ impl Instruction {
             (0b000000, 0b011010) => {
                 if sa == 3 {
                     Ok(Self::new(Opcode::MOD, rd, rs, rt, false, false)) // MOD: rd = rs % rt
+                } else if sa == 2 {
+                    Ok(Self::new(Opcode::DIV2, rd, rs, rt, false, false)) // MOD: rd = rs % rt
                 } else {
                     Ok(Self::new(Opcode::DIV, 32, rs, rt, false, false)) // DIV: (hi, lo) = rs / rt
                 }
@@ -253,6 +255,8 @@ impl Instruction {
             (0b000000, 0b011011) => {
                 if sa == 3 {
                     Ok(Self::new(Opcode::MODU, rd, rs, rt, false, false)) // MODU: rd = rs % rt
+                } else if sa == 2 {
+                    Ok(Self::new(Opcode::DIVU2, rd, rs, rt, false, false)) // MOD: rd = rs % rt
                 } else {
                     Ok(Self::new(Opcode::DIVU, 32, rs, rt, false, false)) // DIVU: (hi, lo) = rs / rt
                 }
