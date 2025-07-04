@@ -14,6 +14,7 @@ pub(crate) fn get_program_build_args(args: &BuildArgs) -> Vec<String> {
     let mut build_args = vec![
         "build".to_string(),
         "--release".to_string(),
+        "-v".to_string(),
         "--target".to_string(),
         BUILD_TARGET.to_string(),
     ];
@@ -82,6 +83,11 @@ pub(crate) fn get_rust_compiler_flags(args: &BuildArgs) -> String {
 /// Execute the command and handle the output depending on the context.
 pub(crate) fn execute_command(mut command: Command) -> Result<()> {
     // Add necessary tags for stdout and stderr from the command.
+    let cmd_str = format!("{} {}",
+       command.get_program().to_string_lossy(),
+       command.get_args().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ")
+    );
+    println!("[COMMAND]: {}", cmd_str);
     let mut child = command
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
